@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { studioCollection } from '../../config/db.js'
+import verifyJWT from '../verifyJWT.js'
 
 export default function studioRoutes(app) {
 
@@ -38,5 +39,108 @@ export default function studioRoutes(app) {
     const result = await studioCollection.findOne({ _id: new ObjectId(id) })
     res.send(result)
   })
+
+
+
+  app.post('/api/studios', verifyJWT, async(req, res) => {
+  const {
+    title,
+    category,
+    hourlyRate,
+    securityDeposit,
+    maxCapacity,
+    location,
+    image,
+    amenities,
+    overview
+  } = req.body
+
+  const studio = {
+    title,
+    category,
+    hourlyRate,
+    securityDeposit,
+    maxCapacity,
+    location,
+    image,
+    gallery: [image],
+    amenities,
+    overview,
+    ownerName: req.user.user.name,
+    ownerEmail: req.user.user.email,
+    rating: 0,
+    reviews: [],
+    createdAt: new Date()
+  }
+
+  const result = await studioCollection.insertOne(studio)
+  res.send(result)
+})
+
+// Get logged-in user's studios
+app.get('/api/my-studios', verifyJWT, async(req, res) => {
+  const email = req.user.user.email
+
+  const result = await studioCollection.find({
+    ownerEmail: email
+  }).toArray()
+
+  res.send(result)
+})
+
+// Update studio (only owner can update)
+app.put('/api/studios/:id', verifyJWT, async(req, res) => {
+  const { id } = req.params
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ message: 'Invalid studio id' })
+  }
+
+  const email = req.user.user.email
+
+  const studio = await studioCollection.findOne({
+    _id: new ObjectId(id)
+  })
+
+  if (!studio) {
+    return res.status(404).send({ message: 'Studio not found' })
+  }
+
+  if (studio.ownerEmail !== email) {
+    return res.status(403).send({ message: 'Forbidden!' })
+  }
+
+  const {
+    title,
+    category,
+    hourlyRate,
+    securityDeposit,
+    maxCapacity,
+    location,
+    image,
+    amenities,
+    overview
+  } = req.body
+
+  const updatedStudio = {
+    title,
+    category,
+    hourlyRate,
+    securityDeposit,
+    maxCapacity,
+    location,
+    image,
+    gallery: [image],
+    amenities,
+    overview
+  }
+
+  const result = await studioCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updatedStudio }
+  )
+
+  res.send(result)
+})
 
 }
