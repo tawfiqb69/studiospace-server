@@ -1,10 +1,17 @@
 import express from 'express';
+import cors from 'cors';
 import { connectToMongoDB } from './config/db.js';
+import studioRoutes from './middleware/routes/studios.js';
+
+
 
 const app = express();
 const PORT = 8000;
+app.use(cors());
+app.use(express.json());
+studioRoutes(app);
 
-connectToMongoDB();
+await connectToMongoDB();
 
 app.get('/', (req, res) => {
   res.send({ message: 'Server is running fine!' });
@@ -13,3 +20,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running at ${PORT}`);
 });
+
+export default app;
