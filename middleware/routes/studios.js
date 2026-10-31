@@ -6,7 +6,7 @@ export default function studioRoutes(app) {
 
   // http://localhost:8000/api/studios?limit=6&sort=rating
   // http://localhost:8000/api/studios?category=Photo Studios
-  app.get('/api/studios', async(req, res) => {
+  app.get('/api/studios', async (req, res) => {
     const { category, sort, limit } = req.query
 
     const filter = {}
@@ -29,7 +29,7 @@ export default function studioRoutes(app) {
   })
 
   // http://localhost:8000/api/studios/<studio id>
-  app.get('/api/studios/:id', async(req, res) => {
+  app.get('/api/studios/:id', async (req, res) => {
     const { id } = req.params
 
     if (!ObjectId.isValid(id)) {
@@ -42,105 +42,134 @@ export default function studioRoutes(app) {
 
 
 
-  app.post('/api/studios', verifyJWT, async(req, res) => {
-  const {
-    title,
-    category,
-    hourlyRate,
-    securityDeposit,
-    maxCapacity,
-    location,
-    image,
-    amenities,
-    overview
-  } = req.body
+  app.post('/api/studios', verifyJWT, async (req, res) => {
+    const {
+      title,
+      category,
+      hourlyRate,
+      securityDeposit,
+      maxCapacity,
+      location,
+      image,
+      amenities,
+      overview
+    } = req.body
 
-  const studio = {
-    title,
-    category,
-    hourlyRate,
-    securityDeposit,
-    maxCapacity,
-    location,
-    image,
-    gallery: [image],
-    amenities,
-    overview,
-    ownerName: req.user.user.name,
-    ownerEmail: req.user.user.email,
-    rating: 0,
-    reviews: [],
-    createdAt: new Date()
-  }
+    const studio = {
+      title,
+      category,
+      hourlyRate,
+      securityDeposit,
+      maxCapacity,
+      location,
+      image,
+      gallery: [image],
+      amenities,
+      overview,
+      ownerName: req.user.user.name,
+      ownerEmail: req.user.user.email,
+      rating: 0,
+      reviews: [],
+      createdAt: new Date()
+    }
 
-  const result = await studioCollection.insertOne(studio)
-  res.send(result)
-})
-
-// Get logged-in user's studios
-app.get('/api/my-studios', verifyJWT, async(req, res) => {
-  const email = req.user.user.email
-
-  const result = await studioCollection.find({
-    ownerEmail: email
-  }).toArray()
-
-  res.send(result)
-})
-
-// Update studio (only owner can update)
-app.put('/api/studios/:id', verifyJWT, async(req, res) => {
-  const { id } = req.params
-
-  if (!ObjectId.isValid(id)) {
-    return res.status(400).send({ message: 'Invalid studio id' })
-  }
-
-  const email = req.user.user.email
-
-  const studio = await studioCollection.findOne({
-    _id: new ObjectId(id)
+    const result = await studioCollection.insertOne(studio)
+    res.send(result)
   })
 
-  if (!studio) {
-    return res.status(404).send({ message: 'Studio not found' })
-  }
+  // Get logged-in user's studios
+  app.get('/api/my-studios', verifyJWT, async (req, res) => {
+    const email = req.user.user.email
 
-  if (studio.ownerEmail !== email) {
-    return res.status(403).send({ message: 'Forbidden!' })
-  }
+    const result = await studioCollection.find({
+      ownerEmail: email
+    }).toArray()
 
-  const {
-    title,
-    category,
-    hourlyRate,
-    securityDeposit,
-    maxCapacity,
-    location,
-    image,
-    amenities,
-    overview
-  } = req.body
+    res.send(result)
+  })
 
-  const updatedStudio = {
-    title,
-    category,
-    hourlyRate,
-    securityDeposit,
-    maxCapacity,
-    location,
-    image,
-    gallery: [image],
-    amenities,
-    overview
-  }
+  // Update studio (only owner can update)
+  app.put('/api/studios/:id', verifyJWT, async (req, res) => {
+    const { id } = req.params
 
-  const result = await studioCollection.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: updatedStudio }
-  )
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid studio id' })
+    }
 
-  res.send(result)
-})
+    const email = req.user.user.email
+
+    const studio = await studioCollection.findOne({
+      _id: new ObjectId(id)
+    })
+
+    if (!studio) {
+      return res.status(404).send({ message: 'Studio not found' })
+    }
+
+    if (studio.ownerEmail !== email) {
+      return res.status(403).send({ message: 'Forbidden!' })
+    }
+
+    const {
+      title,
+      category,
+      hourlyRate,
+      securityDeposit,
+      maxCapacity,
+      location,
+      image,
+      amenities,
+      overview
+    } = req.body
+
+    const updatedStudio = {
+      title,
+      category,
+      hourlyRate,
+      securityDeposit,
+      maxCapacity,
+      location,
+      image,
+      gallery: [image],
+      amenities,
+      overview
+    }
+
+    const result = await studioCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedStudio }
+    )
+
+    res.send(result)
+  })
+
+  // Delete studio (only owner can delete)
+  app.delete('/api/studios/:id', verifyJWT, async (req, res) => {
+    const { id } = req.params
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid studio id' })
+    }
+
+    const email = req.user.user.email
+
+    const studio = await studioCollection.findOne({
+      _id: new ObjectId(id)
+    })
+
+    if (!studio) {
+      return res.status(404).send({ message: 'Studio not found' })
+    }
+
+    if (studio.ownerEmail !== email) {
+      return res.status(403).send({ message: 'Forbidden!' })
+    }
+
+    const result = await studioCollection.deleteOne({
+      _id: new ObjectId(id)
+    })
+
+    res.send(result)
+  })
 
 }
