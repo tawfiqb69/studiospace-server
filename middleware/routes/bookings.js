@@ -1,5 +1,6 @@
 import verifyJWT from '../verifyJWT.js'
 import { bookingCollection } from '../../config/db.js'
+import { ObjectId } from 'mongodb'
 
 export default function bookingRoutes(app) {
 
@@ -49,6 +50,35 @@ export default function bookingRoutes(app) {
       .find({ userEmail: req.user.user.email })
       .sort({ createdAt: -1 })
       .toArray()
+    res.send(result)
+  })
+
+    // PATCH /api/bookings/:id (private): shudhu nijer Pending booking cancel
+  app.patch('/api/bookings/:id', verifyJWT, async(req, res) => {
+    const { id } = req.params
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid booking id' })
+    }
+
+    const booking = await bookingCollection.findOne({ _id: new ObjectId(id) })
+
+    if (!booking) {
+      return res.status(404).send({ message: 'Booking not found' })
+    }
+
+    if (booking.userEmail !== req.user.user.email) {
+      return res.status(403).send({ message: 'Forbidden' })
+    }
+
+    if (booking.status !== 'Pending') {
+      return res.status(400).send({ message: 'Only pending bookings can be cancelled' })
+    }
+
+    const result = await bookingCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: 'Cancelled' } }
+    )
     res.send(result)
   })
 
