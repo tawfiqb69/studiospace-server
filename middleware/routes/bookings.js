@@ -43,4 +43,13 @@ export default function bookingRoutes(app) {
     res.send(result)
   })
 
+    // GET /api/bookings (private): shudhu nijer booking
+  app.get('/api/bookings', verifyJWT, async(req, res) => {
+    const result = await bookingCollection
+      .find({ userEmail: req.user.user.email })
+      .sort({ createdAt: -1 })
+      .toArray()
+    res.send(result)
+  })
+
 }
