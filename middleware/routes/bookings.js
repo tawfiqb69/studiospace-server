@@ -44,7 +44,7 @@ export default function bookingRoutes(app) {
     res.send(result)
   })
 
-    // GET /api/bookings (private): shudhu nijer booking
+    // GET /api/bookings (private)
   app.get('/api/bookings', verifyJWT, async(req, res) => {
     const result = await bookingCollection
       .find({ userEmail: req.user.user.email })
@@ -53,7 +53,7 @@ export default function bookingRoutes(app) {
     res.send(result)
   })
 
-    // PATCH /api/bookings/:id (private): shudhu nijer Pending booking cancel
+    // PATCH /api/bookings/:id (private)
   app.patch('/api/bookings/:id', verifyJWT, async(req, res) => {
     const { id } = req.params
 

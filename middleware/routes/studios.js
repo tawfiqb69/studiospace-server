@@ -79,7 +79,8 @@ app.post('/api/studios', verifyJWT, async (req, res) => {
   res.send(result)
 })
 
-  // Get logged-in user's studios
+  //  logged-in user's studios
+
   app.get('/api/my-studios', verifyJWT, async (req, res) => {
     const email = req.user.user.email
 
@@ -91,6 +92,7 @@ app.post('/api/studios', verifyJWT, async (req, res) => {
   })
 
 // Update studio (only owner can update)
+
 app.put('/api/studios/:id', verifyJWT, async (req, res) => {
   const { id } = req.params
 
